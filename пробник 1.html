@@ -1,0 +1,39 @@
+<h2>Привет, <span id="client-name">Красотка</span>! 💅</h2>
+<p>Выбери услугу, на которую хочешь записаться:</p>
+
+<div class="service-card">
+    <label><b>Услуга:</b></label>
+    <select id="service">
+        <option value="Маникюр + гель-лак (1500₽)">Маникюр + гель-лак (1500₽)</option>
+        <option value="Наращивание (2000₽)">Наращивание (2000₽)</option>
+        <option value="Френч / Дизайн (1800₽)">Френч / Дизайн (1800₽)</option>
+    </select>
+</div>
+
+<button onclick="sendBooking()">Отправить заявку мастеру</button>
+
+<script>
+    // Инициализируем Telegram Web App
+    let tg = window.Telegram.WebApp;
+    tg.expand(); // Разворачиваем окно на весь экран
+
+    // Автоматически берем имя клиента из его профиля Telegram
+    let user = tg.initDataUnsafe?.user;
+    if (user && user.first_name) {
+        document.getElementById('client-name').innerText = user.first_name;
+    }
+
+    // Функция отправки данных обратно в бота
+    function sendBooking() {
+        let service = document.getElementById('service').value;
+        
+        // Собираем данные в объект
+        let data = {
+            service: service,
+            client_name: user ? user.first_name : "Без имени"
+        };
+
+        // Отправляем данные боту (закрывая приложение)
+        tg.sendData(JSON.stringify(data));
+    }
+</script>
