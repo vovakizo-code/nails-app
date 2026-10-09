@@ -1,39 +1,336 @@
-<h2>Привет, <span id="client-name">Красотка</span>! 💅</h2>
-<p>Выбери услугу, на которую хочешь записаться:</p>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Студия Маникюра</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg: var(--tg-theme-bg-color, #fdfbf9);
+            --card-bg: var(--tg-theme-secondary-bg-color, #ffffff);
+            --text: var(--tg-theme-text-color, #222222);
+            --hint: var(--tg-theme-hint-color, #8e8e93);
+            --accent: var(--tg-theme-button-color, #e08b8b);
+            --accent-text: var(--tg-theme-button-text-color, #ffffff);
+            --border: rgba(0, 0, 0, 0.06);
+        }
 
-<div class="service-card">
-    <label><b>Услуга:</b></label>
-    <select id="service">
-        <option value="Маникюр + гель-лак (1500₽)">Маникюр + гель-лак (1500₽)</option>
-        <option value="Наращивание (2000₽)">Наращивание (2000₽)</option>
-        <option value="Френч / Дизайн (1800₽)">Френч / Дизайн (1800₽)</option>
-    </select>
-</div>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-<button onclick="sendBooking()">Отправить заявку мастеру</button>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 16px 16px 90px 16px;
+        }
 
-<script>
-    // Инициализируем Telegram Web App
-    let tg = window.Telegram.WebApp;
-    tg.expand(); // Разворачиваем окно на весь экран
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
 
-    // Автоматически берем имя клиента из его профиля Telegram
-    let user = tg.initDataUnsafe?.user;
-    if (user && user.first_name) {
-        document.getElementById('client-name').innerText = user.first_name;
-    }
+        .header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            margin: 0;
+        }
 
-    // Функция отправки данных обратно в бота
-    function sendBooking() {
-        let service = document.getElementById('service').value;
-        
-        // Собираем данные в объект
-        let data = {
-            service: service,
-            client_name: user ? user.first_name : "Без имени"
-        };
+        .header p {
+            font-size: 14px;
+            color: var(--hint);
+            margin: 6px 0 0;
+        }
 
-        // Отправляем данные боту (закрывая приложение)
-        tg.sendData(JSON.stringify(data));
-    }
-</script>
+        .section-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin: 18px 0 10px 4px;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Карточки услуг */
+        .service-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .service-card {
+            background: var(--card-bg);
+            border: 2px solid transparent;
+            border-radius: 16px;
+            padding: 14px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+            transition: all 0.2s ease;
+        }
+
+        .service-card.active {
+            border-color: var(--accent);
+            background: rgba(224, 139, 139, 0.08);
+        }
+
+        .service-info h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .service-info span {
+            font-size: 13px;
+            color: var(--hint);
+        }
+
+        .service-price {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--accent);
+            white-space: nowrap;
+        }
+
+        /* Дополнительные опции */
+        .addons-list {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .addon-chip {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 8px 14px;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.2s;
+        }
+
+        .addon-chip.active {
+            background: var(--accent);
+            color: var(--accent-text);
+            border-color: var(--accent);
+        }
+
+        /* Выбор даты и времени */
+        .datetime-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 14px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+        }
+
+        input[type="date"], textarea {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text);
+            font-size: 15px;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .time-slots {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .slot {
+            background: var(--bg);
+            border-radius: 10px;
+            padding: 10px 0;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            transition: 0.2s;
+        }
+
+        .slot.active {
+            background: var(--accent);
+            color: var(--accent-text);
+            border-color: var(--accent);
+        }
+
+        /* Пожелания */
+        textarea {
+            resize: none;
+            height: 70px;
+            margin-top: 4px;
+        }
+
+        /* Нижняя фиксированная кнопка */
+        .bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 12px 16px;
+            background: var(--bg);
+            border-top: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-confirm {
+            width: 100%;
+            background: var(--accent);
+            color: var(--accent-text);
+            border: none;
+            border-radius: 14px;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Привет, <span id="client-name">Красотка</span>! ✨</h1>
+        <p>Выбери услугу и запишись за пару секунд</p>
+    </div>
+
+    <div class="section-title">💅 Основная услуга</div>
+    <div class="service-list">
+        <div class="service-card active" onclick="selectService(this, 'Маникюр + гель-лак', 1600)">
+            <div class="service-info">
+                <h3>Маникюр + гель-лак</h3>
+                <span>снятие, выравнивание, покрытие • 1.5 ч</span>
+            </div>
+            <div class="service-price">1 600 ₽</div>
+        </div>
+
+        <div class="service-card" onclick="selectService(this, 'Наращивание ногтей', 2400)">
+            <div class="service-info">
+                <h3>Наращивание ногтей</h3>
+                <span>моделирование любой формы • 2.5 ч</span>
+            </div>
+            <div class="service-price">2 400 ₽</div>
+        </div>
+
+        <div class="service-card" onclick="selectService(this, 'Smart-педикюр + гель-лак', 2000)">
+            <div class="service-info">
+                <h3>Smart-педикюр</h3>
+                <span>полная обработка стопы и покрытие • 1.5 ч</span>
+            </div>
+            <div class="service-price">2 000 ₽</div>
+        </div>
+
+        <div class="service-card" onclick="selectService(this, 'Гигиенический маникюр', 1000)">
+            <div class="service-info">
+                <h3>Гигиенический маникюр</h3>
+                <span>без покрытия, уход за кутикулой • 45 мин</span>
+            </div>
+            <div class="service-price">1 000 ₽</div>
+        </div>
+    </div>
+
+    <div class="section-title">✨ Дополнительно</div>
+    <div class="addons-list">
+        <div class="addon-chip" onclick="toggleAddon(this, 'Френч / Градиент (+300₽)')">+ Френч (+300₽)</div>
+        <div class="addon-chip" onclick="toggleAddon(this, 'Дизайн 1-2 ногтей (+150₽)')">+ Дизайн (+150₽)</div>
+        <div class="addon-chip" onclick="toggleAddon(this, 'Ремонт ногтя (+100₽)')">+ Ремонт (+100₽)</div>
+        <div class="addon-chip" onclick="toggleAddon(this, 'SPA-уход (+250₽)')">+ SPA-уход (+250₽)</div>
+    </div>
+
+    <div class="section-title">📅 Выберите дату и время</div>
+    <div class="datetime-card">
+        <input type="date" id="book-date">
+        <div class="time-slots">
+            <div class="slot" onclick="selectSlot(this, '10:00')">10:00</div>
+            <div class="slot active" onclick="selectSlot(this, '12:30')">12:30</div>
+            <div class="slot" onclick="selectSlot(this, '15:00')">15:00</div>
+            <div class="slot" onclick="selectSlot(this, '18:00')">18:00</div>
+        </div>
+    </div>
+
+    <div class="section-title">💬 Комментарий или пожелания</div>
+    <textarea id="comment" placeholder="Например: есть скол на указательном, хочу нюдовый цвет..."></textarea>
+
+    <div class="bottom-bar">
+        <button class="btn-confirm" onclick="submitBooking()">Записаться 💌</button>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        // Подставляем имя из профиля Telegram
+        const user = tg.initDataUnsafe?.user;
+        if (user && user.first_name) {
+            document.getElementById('client-name').innerText = user.first_name;
+        }
+
+        // По умолчанию ставим завтрашний день
+        const dateInput = document.getElementById('book-date');
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        dateInput.value = tomorrow.toISOString().split('T')[0];
+
+        let selectedService = { name: 'Маникюр + гель-лак', price: 1600 };
+        let selectedAddons = [];
+        let selectedTime = '12:30';
+
+        function selectService(el, name, price) {
+            document.querySelectorAll('.service-card').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            selectedService = { name, price };
+            tg.HapticFeedback?.selectionChanged();
+        }
+
+        function toggleAddon(el, name) {
+            el.classList.toggle('active');
+            if (el.classList.contains('active')) {
+                selectedAddons.push(name);
+            } else {
+                selectedAddons = selectedAddons.filter(a => a !== name);
+            }
+            tg.HapticFeedback?.selectionChanged();
+        }
+
+        function selectSlot(el, time) {
+            document.querySelectorAll('.slot').forEach(s => s.classList.remove('active'));
+            el.classList.add('active');
+            selectedTime = time;
+            tg.HapticFeedback?.selectionChanged();
+        }
+
+        function submitBooking() {
+            tg.HapticFeedback?.notificationOccurred('success');
+            
+            const bookingData = {
+                client_name: user ? user.first_name : "Гость",
+                service: selectedService.name,
+                price: selectedService.price,
+                addons: selectedAddons,
+                date: dateInput.value,
+                time: selectedTime,
+                comment: document.getElementById('comment').value.trim()
+            };
+
+            // Отправляем все структурированные данные обратно в бот
+            tg.sendData(JSON.stringify(bookingData));
+        }
+    </script>
+</body>
+</html>
